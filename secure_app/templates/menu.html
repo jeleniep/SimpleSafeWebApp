@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Pdf</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/script.js"></script>
+</head>
+<body>
+  <a class="logout" href="/logout">Wyloguj</a> <br />
+  <a class="logout" href="/changepassword">Zmień hasło</a>
+
+  <h1>Notatki</h1>
+  <h2>  <a class="logout" href="/addnote">Dodaj notatkę</a> <br /></h2>
+  {% if notes %}
+    <p>Lista notatek:</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Treść</th>
+          <th>Autor</th>
+          <th>Akcje</th>
+        </tr>
+      </thead>     
+      <tbody>
+          {% for note in notes %}
+          <tr>
+              <td>{{note.text}}</td>
+              <td>{{note.owner}}</td>
+              <td></td>
+            </tr>
+          {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+  <ul>
+
+  </ul>
+
+</form>
+</body>
+</html>

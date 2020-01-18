@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title> Logowanie </title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/script.js"></script>
+</head>
+<body>
+  <a class="logout" href="/register">Rejestracja</a> <br />
+  {% if error %}
+  {{error}}
+  {% endif %}
+<form id="loginForm" action="/login" method="POST" enctype="multipart/form-data">
+    <h1>Logowanie</h1>
+    <fieldset>        
+      <label class="" for="login">Login</label>
+      <input type="text" name="login" id="login" value="" required>
+
+      <label class="" for="password">Hasło</label>
+      <input type="password" name="password" id="password" value="" required>
+
+    </fieldset>
+    <fieldset>
+
+    </fieldset>
+    <button type="submit" id="submitButton">Zaloguj</button>
+</form>
+</body>
+</html>
