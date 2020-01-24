@@ -7,9 +7,13 @@
     <script src="/static/script.js"></script>
 </head>
 <body>
+  Witaj, {{ username }} <br />
   <a class="logout" href="/logout">Wyloguj</a> <br />
-  <a class="logout" href="/changepassword">Zmień hasło</a>
-
+  <a class="logout" href="/changepassword">Zmień hasło</a>  <br />
+  <a class="logout" href="/loginhistory">Historia logowania</a><br />
+  {% if error %}
+  {{error}}
+  {% endif %}
   <h1>Notatki</h1>
   <h2>  <a class="logout" href="/addnote">Dodaj notatkę</a> <br /></h2>
   {% if notes %}
@@ -27,7 +31,13 @@
           <tr>
               <td>{{note.text}}</td>
               <td>{{note.owner}}</td>
-              <td></td>
+              <td>
+                <ul>
+                {% if note.can_delete %}
+                  <li><a href="notes/delete/{{note.id}}">Usuń</a></li>
+                {% endif %}                  
+                </ul>
+              </td>
             </tr>
           {% endfor %}
       </tbody>

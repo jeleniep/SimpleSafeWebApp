@@ -1,6 +1,6 @@
 from flask import Flask
 import redis
-from flask import request, make_response, render_template, send_file, redirect, Response
+from flask import request, make_response, render_template, send_file, redirect, Response, jsonify
 import sys
 import uuid
 import requests
@@ -19,7 +19,7 @@ app = Flask(__name__)
 app.config["MONGO_URI"] = "mongodb://user:password@mongodb/db"
 
 mongo = PyMongo(app)
-r = redis.Redis(host='db', port=6379, db=0)
+r = redis.Redis(host='db', port=6379, db=0, charset='utf-8', decode_responses=True)
 
 register_utils = Register(mongo)
 login_utils = Login(r,mongo)
@@ -44,10 +44,9 @@ def checkAuth(sessionId):
 @app.route('/')
 def index():
     if checkAuth(request.cookies.get('sessionId')):
-        exp = datetime.now() + timedelta(minutes = 2)
-        current_user = r.hget('sessions', request.cookies.get('sessionId')).decode("utf-8")
+        current_user = r.hget('sessions', request.cookies.get('sessionId'))
         notes_list = notes_utils.get_notes(current_user)
-        response = make_response( render_template("menu.html", notes = notes_list), 200)
+        response = make_response( render_template("menu.html", notes = notes_list, username = current_user, error = ""), 200)
         return response
     response = make_response(render_template("index.html"), 200)
     return response
@@ -56,22 +55,15 @@ def index():
 def login_to_app():
     username = request.form.get('login')
     password = request.form.get('password')
-    # if user is not None:
-    #     hashed_password = crypt.crypt(password, user.get("salt"))
-    #     print(hashed_password, flush=True)
-    #     if user.get("hash") == hashed_password:
-    #         new_uuid = login_utils.generate_uuid()
-    #         r.hset('sessions', new_uuid, username)
-    #         response = redirect("/")
-    #         response.set_cookie('sessionId', new_uuid, httponly=True)
-    #         return response
-    if login_utils.login(username, password):        
+    ip = request.remote_addr
+    login_status = login_utils.login(username, password, ip)
+    if login_status.get("code") == 200:     
         new_uuid = login_utils.generate_uuid()
         r.hset('sessions', new_uuid, username)
         response = redirect("/")
-        response.set_cookie('sessionId', new_uuid, httponly=True)
+        response.set_cookie('sessionId', new_uuid, httponly=True, secure=True)
         return response
-    response = make_response(render_template("index.html", error = "Niepoprawny login lub hasło."), 401)
+    response = make_response(render_template("index.html", error = login_status.get("status")), login_status.get("code"))
     return response
 
 
@@ -105,7 +97,7 @@ def show_change_password_screen():
 @app.route('/changepassword', methods=['POST'])
 @login_required
 def change_password():
-    current_user = r.hget('sessions', request.cookies.get('sessionId')).decode("utf-8")
+    current_user = r.hget('sessions', request.cookies.get('sessionId'))
     change_password_status = register_utils.change_password(current_user, request.form)
     if change_password_status.get("code") != 201:
         response = make_response(render_template("change_password.html", error=change_password_status.get("status")), change_password_status.get("code"))
@@ -123,17 +115,28 @@ def show_note_screen():
 @app.route('/notes', methods=['POST'])
 @login_required
 def add_note():
-    current_user = r.hget('sessions', request.cookies.get('sessionId')).decode("utf-8")
+    current_user = r.hget('sessions', request.cookies.get('sessionId'))
     print(current_user, flush=True)
     adding_status = notes_utils.add_note(request.form, current_user)
+    users_list = notes_utils.get_users_list()
     if adding_status.get("code") != 201:
-        response = make_response(render_template("add_note.html", error=adding_status.get("status")), adding_status.get("code"))
+        response = make_response(render_template("add_note.html", users=users_list, error=adding_status.get("status")), adding_status.get("code"))
         return response
     return redirect("/")
 
 
-@app.route('/notes/<id>', methods=['GET'])
+@app.route('/notes/delete/<id>', methods=['GET'])
 @login_required
-def get_note(id):
-    mongo.db.note.remove()
+def remove_note(id):
+    current_user = r.hget('sessions', request.cookies.get('sessionId'))
+    notes_utils.delete_note(id, current_user)
     return redirect("/")
+
+@app.route('/loginhistory', methods=['GET'])
+@login_required
+def show_login_history():
+    current_user = r.hget('sessions', request.cookies.get('sessionId'))
+    history = login_utils.get_login_history(current_user) 
+    response = make_response(render_template("user_history.html", history=history))
+    return response
+

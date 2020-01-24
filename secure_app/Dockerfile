@@ -6,8 +6,7 @@ RUN pip install pyjwt
 RUN pip install pymongo
 RUN pip install Flask-PyMongo
 RUN pip install py-bcrypt
-RUN pip install scipy
-
+RUN pip install dateutils
 ## THE LIFE SAVER
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.2.1/wait /wait
 RUN chmod +x /wait

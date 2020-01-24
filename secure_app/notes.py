@@ -26,13 +26,13 @@ class Notes:
     def add_note(self, note_data, login):
         text = note_data.get('note')
         usernames = note_data.getlist('users')
-        pattern = re.compile("[A-Za-z0-9    _]+")
+        pattern = re.compile("^[A-Za-z0-9    _.]+")
 
         ret = {
                 "code": 201,
                 "status": None
         }
-        if pattern.match(text) is None:
+        if pattern.fullmatch(text) is None:
             ret = {
             "code": 406,
             "status": "Notatka może składać się tylko z liter, cyfr, spacji oraz znaku '_'."
@@ -67,27 +67,46 @@ class Notes:
             }
         return ret
 
-    def test(self):
-        print("test", flush=True)
-
     def get_notes(self, login):
-        # try: 
+        try: 
             user = self.mongo.db.user.find_one({"login": login})
             if user is None:
                 return []
             notes_list = []
             notes = self.mongo.db.note.find({ "$or": [ { "users_allowed": user["_id"] }, { "public": True }, { "owner": user["_id"] } ] })
-            # notes = self.mongo.db.note.find({ "users_allowed": user["_id"]})
 
-            print("\n\n\n\n blee \n\n", flush=True)
+            # print("\n\n\n\n blee \n\n", flush=True)
 
             for note in notes:
                 owner_username = ""
                 user = self.mongo.db.user.find_one({"_id": ObjectId(note["owner"])})
                 if user is not None:
                      owner_username = user["login"]
-                print(note["public"], flush=True)
-                notes_list.append({ "text": note["text"], "owner": owner_username})
+                # print(note["public"], flush=True)
+                notes_list.append({ "text": note["text"], "id": note["_id"], "owner": owner_username, "can_delete": login == owner_username})
             return notes_list
-        # except:            
-        #      return []
+        except:            
+             return []
+
+    def delete_note(self, note_id, login):      
+        try:
+            note = self.mongo.db.note.find_one({"_id": ObjectId(note_id)})
+            user = self.mongo.db.user.find_one({"login": login})
+            if user["_id"] == note["owner"]:
+                self.mongo.db.note.delete_one({"_id": ObjectId(note_id)})
+                return {
+                    "code": 201,
+                    "status": None
+                }   
+        except:
+            return {
+                "code": 500,
+                "status": "Błąd podczas usuwania."
+            }
+        return {
+            "code": 401,
+            "status": "Brak uprawnień."
+        }
+
+    def edit_note(self, note_id, login):
+        return False

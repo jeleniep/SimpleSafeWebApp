@@ -14,7 +14,7 @@ services:
         WAIT_HOSTS: web:5000
 
   web:
-    image: jeleniep/flask_mongo
+    image: jeleniep/flask-safe
     depends_on:
       # - db
       - mongodb

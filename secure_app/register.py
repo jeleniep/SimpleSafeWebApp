@@ -3,7 +3,6 @@ import random
 import string
 import re
 import bcrypt
-pattern = re.compile("[A-Za-z0-9    _]+")
 
 # pattern.match(string)
 
@@ -15,8 +14,15 @@ class Register:
         user = self.mongo.db.user.find_one({"login": login})
         if user is not None:
             ret = {
-                "code": 404,
+                "code": 400,
                 "status": "Podany login jest już zajęty"
+            }
+            return ret
+        pattern = re.compile("[A-Za-z0-9_]+")
+        if pattern.fullmatch(login) is None:
+            ret = {
+                "code": 400,
+                "status": "Login może składać się tylko z małych i dużych liter, cyfr oraz znaku '_'."
             }
             return ret
         return None
@@ -26,6 +32,17 @@ class Register:
             ret = {
                 "code": 404,
                 "status": "Podane hasła są niezgodne"
+            }
+            return ret
+        length_error = len(password) < 8
+        digit_error = re.search(r"\d", password) is None
+        uppercase_error = re.search(r"[A-Z]", password) is None
+        lowercase_error = re.search(r"[a-z]", password) is None
+        password_ok = not ( length_error or digit_error or uppercase_error or lowercase_error )
+        if not password_ok:
+            ret = {
+                "code": 400,
+                "status": "Hasło powinno składać z małej i wielkiej litery, cyfry oraz mieć długość przynajmniej 8 znaków."
             }
             return ret
         return None

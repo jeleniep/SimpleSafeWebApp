@@ -2,11 +2,12 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title> Rejestracja </title>
+    <title> Dodawanie notatki </title>
     <link rel="stylesheet" href="/static/style.css">
     <script src="/static/script.js"></script>
 </head>
 <body>
+    <a class="logout" href="/">Powrót</a><br />
     {% if error %}
       {{error}}
     {% endif %}
@@ -16,7 +17,7 @@
     <fieldset>
        
       <label class="" for="login">Treść</label>
-      <textarea name="note" form="registerForm">Enter text here...</textarea>
+      <textarea name="note" form="registerForm"></textarea>
     </fieldset>
     <fieldset> 
         <label class="" for="users">Jeśli nie zostaną wybrani użytkownicy notatka będzie publiczna.</label>
